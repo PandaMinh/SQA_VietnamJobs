@@ -102,3 +102,4 @@ Due: 26/04/2024 - 13/05/2024
 Link drive:  
 - Demo website: https://drive.google.com/file/d/1JIO2ZKBJ-Ft_5Qd71PWQuP4ZOuoFaUvA/view?usp=drive_link  
 - Demo app: https://drive.google.com/file/d/1ktE5Q1gBZEoVxmnPB2ePlyoingwgaC0B/view?usp=sharing  
+- Báo cáo: https://docs.google.com/document/d/1pFXK16MTiGwkGbooDZsSsAjUhwBkbXmmUYY3STUuJvs/edit?tab=t.0#heading=h.6g0rregb0izk
