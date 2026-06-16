@@ -1,10 +1,8 @@
 package com.demo.services;
 
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.List;
 
-import jakarta.annotation.PostConstruct;
 import org.modelmapper.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
@@ -18,9 +16,7 @@ import org.springframework.stereotype.Service;
 
 import com.demo.dtos.AccountDTO;
 import com.demo.entities.Account;
-import com.demo.entities.Postings;
 import com.demo.repositories.AccountRepository;
-import com.demo.repositories.PostingRepository;
 
 import jakarta.transaction.Transactional;
 @Service("accountService")
@@ -40,6 +36,17 @@ public class AccountServiceImpl implements AccountService{
 	@Override
 	public boolean save(AccountDTO accountDTO) {
 		try {
+			if (accountDTO == null || accountDTO.getUsername() == null || accountDTO.getUsername().trim().isEmpty()) {
+				return false;
+			}
+			String normalizedUsername = accountDTO.getUsername().trim();
+			boolean duplicateUsername = accountDTO.getId() == null
+					? accountRepository.existsByUsernameIgnoreCase(normalizedUsername)
+					: accountRepository.existsByUsernameIgnoreCaseAndIdNot(normalizedUsername, accountDTO.getId());
+			if (duplicateUsername) {
+				return false;
+			}
+			accountDTO.setUsername(normalizedUsername);
 			Account account =  mapper.map(accountDTO, Account.class);
 			accountRepository.save(account);
 			return true;
@@ -51,7 +58,7 @@ public class AccountServiceImpl implements AccountService{
 	@Override
 	public boolean login1(String username, String password) {
 		try {
-			Account account = accountRepository.findbyUsername(username);
+			Account account = findActiveAccountByUsername(username);
 
 			if(account != null) {
 				System.out.println();
@@ -72,13 +79,13 @@ public class AccountServiceImpl implements AccountService{
 
 	@Override
 	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-		AccountDTO account = mapper.map(accountRepository.findbyUsername(username), new AccountDTO().getClass());
+		Account account = findActiveAccountByUsername(username);
 		if(account == null) {
 			throw new UsernameNotFoundException("Username not found");
 		} else {
 			List<GrantedAuthority> authorities = new ArrayList<GrantedAuthority>();
-			authorities.add(new SimpleGrantedAuthority(account.getTypeAccount()));
-			return new User(username, account.getPassword() ,authorities);
+			authorities.add(new SimpleGrantedAuthority(account.getTypeAccount().getName()));
+			return new User(account.getUsername(), account.getPassword() ,authorities);
 		}
 	}
 
@@ -91,7 +98,7 @@ public class AccountServiceImpl implements AccountService{
 	@Override
 	public AccountDTO findByEmail(String email) {
 		// TODO Auto-generated method stub
-		return mapper.map(accountRepository.findByEmail(email), new AccountDTO().getClass());
+		return toDto(accountRepository.findByEmail(email));
 	}
 
 	@Override
@@ -109,8 +116,12 @@ public class AccountServiceImpl implements AccountService{
 
 	@Override
 	public AccountDTO findByUsername(String username) {
-		// TODO Auto-generated method stub
-		return mapper.map(accountRepository.findbyUsername(username), new AccountDTO().getClass());
+		return toDto(findActiveAccountByUsername(username));
+	}
+
+	@Override
+	public AccountDTO findByUsernameAndSecurityCode(String username, String securityCode) {
+		return toDto(accountRepository.findFirstByUsernameIgnoreCaseAndSecurityCodeOrderByIdDesc(username, securityCode));
 	}
 
 	   @Override
@@ -136,7 +147,7 @@ public class AccountServiceImpl implements AccountService{
 
 		@Override
 		public Account getByUsername(String username) {
-			return accountRepository.getByUsername(username);
+			return findActiveAccountByUsername(username);
 		}
 
 	@Override
@@ -155,5 +166,19 @@ public class AccountServiceImpl implements AccountService{
 		}else{
 			return 0;
 		}
+	}
+
+	private Account findActiveAccountByUsername(String username) {
+		if (username == null || username.trim().isEmpty()) {
+			return null;
+		}
+		return accountRepository.findFirstByUsernameIgnoreCaseAndStatusOrderByIdDesc(username.trim(), true);
+	}
+
+	private AccountDTO toDto(Account account) {
+		if (account == null) {
+			return null;
+		}
+		return mapper.map(account, AccountDTO.class);
 	}
 }

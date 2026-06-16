@@ -34,7 +34,6 @@ public class EmployerApplyController {
 			redirectAttributes.addFlashAttribute("error", "Thất bại...");
 		}
 
-		applicationHistoryService.save(applicationHistory);
 		modelMap.put("id", id);
 		return "redirect:/employer/apply/index/" + applicationHistory.getPostingID();
 	}

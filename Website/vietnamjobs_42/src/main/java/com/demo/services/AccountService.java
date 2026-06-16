@@ -23,6 +23,8 @@ public interface AccountService extends UserDetailsService {
 	public AccountDTO findById(int id);
 	
 	public AccountDTO findByUsername(String username);
+
+	public AccountDTO findByUsernameAndSecurityCode(String username, String securityCode);
 	
 	public AccountDTO findByEmail(String email);
 	

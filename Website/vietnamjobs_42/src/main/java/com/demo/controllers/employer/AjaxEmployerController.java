@@ -40,26 +40,35 @@ public class AjaxEmployerController {
 		return applicationHistoryDTO;
 		
 	}
-	@PostMapping(value = "sendMailAcp", produces = MimeTypeUtils.APPLICATION_JSON_VALUE)
-	public boolean sendMailAcp(@RequestParam("appID") int appID, @RequestParam("mailBody") String mailBody, @RequestParam("mailSubject") String mailSubject, @RequestParam("mailTo") String mailTo, @RequestParam("mailFrom") String mailFrom) {
-		boolean status = true;
-	
-		MimeMessage mimeMessage = sender.createMimeMessage();
-		MimeMessageHelper messageHelper = new MimeMessageHelper(mimeMessage);
-		try {
-			messageHelper.setFrom(mailFrom);
-			messageHelper.setTo(mailTo);
-			messageHelper.setSubject(mailSubject);
-			messageHelper.setText(mailBody, true);
-		} catch (MessagingException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		ApplicationHistoryDTO applicationHistoryDTO = applicationHistoryService.findByID(appID);
-		applicationHistoryDTO.setResult(1);
-		applicationHistoryService.save(applicationHistoryDTO);
-		sender.send(mimeMessage);
-		return status;
-		
-	}
+    @PostMapping(value = "sendMailAcp", produces = MimeTypeUtils.APPLICATION_JSON_VALUE)
+    public boolean sendMailAcp(@RequestParam("appID") int appID, @RequestParam("mailBody") String mailBody, @RequestParam("mailSubject") String mailSubject, @RequestParam("mailTo") String mailTo, @RequestParam("mailFrom") String mailFrom) {
+        if (mailSubject == null || mailSubject.trim().isEmpty()
+                || mailBody == null || mailBody.trim().isEmpty()
+                || mailTo == null || mailTo.trim().isEmpty()
+                || mailFrom == null || mailFrom.trim().isEmpty()) {
+            return false;
+        }
+
+        try {
+            MimeMessage mimeMessage = sender.createMimeMessage();
+            MimeMessageHelper messageHelper = new MimeMessageHelper(mimeMessage);
+            messageHelper.setFrom(mailFrom);
+            messageHelper.setTo(mailTo);
+            messageHelper.setSubject(mailSubject);
+            messageHelper.setText(mailBody, true);
+            sender.send(mimeMessage);
+
+            ApplicationHistoryDTO applicationHistoryDTO = applicationHistoryService.findByID(appID);
+            applicationHistoryDTO.setResult(1);
+            applicationHistoryService.save(applicationHistoryDTO);
+            return true;
+        } catch (MessagingException e) {
+            e.printStackTrace();
+            return false;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+        
+    }
 }

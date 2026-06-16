@@ -20,6 +20,7 @@ import org.modelmapper.ModelMapper;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -295,5 +296,100 @@ public class PostingServiceTest {
 
         assertThrows(RuntimeException.class, () -> postingService.getAll());
         verify(postingRepository, times(1)).findAll();
+    }
+
+    @Test
+    void testSearch_WithFilters_ReturnsMappedResults() {
+        List<Postings> postingsList = Arrays.asList(posting1, posting2);
+        List<PostingDTO> postingDTOs = Arrays.asList(postingDTO, new PostingDTO());
+        when(postingRepository.search(1, 2, 3, 4, 5, "Java")).thenReturn(postingsList);
+        when(modelMapper.map(any(), any(java.lang.reflect.Type.class))).thenReturn(postingDTOs);
+
+        List<PostingDTO> result = postingService.search(1, 2, 3, 4, 5, "Java");
+
+        verify(postingRepository).search(1, 2, 3, 4, 5, "Java");
+        assertNotNull(result);
+        assertEquals(2, result.size());
+    }
+
+    @Test
+    void testFindById_Success() {
+        when(postingRepository.findById(1)).thenReturn(Optional.of(posting));
+        when(modelMapper.map(posting, PostingDTO.class)).thenReturn(postingDTO);
+
+        PostingDTO result = postingService.findById(1);
+
+        verify(postingRepository).findById(1);
+        assertNotNull(result);
+        assertEquals(1, result.getId());
+        assertEquals("Dev Java", result.getTitle());
+    }
+
+    @Test
+    void testFindById_NotFound_ThrowsException() {
+        when(postingRepository.findById(999)).thenReturn(Optional.empty());
+
+        assertThrows(java.util.NoSuchElementException.class, () -> postingService.findById(999));
+        verify(postingRepository).findById(999);
+    }
+
+    @Test
+    void testCountByEmployerId_ReturnsPositive() {
+        when(postingRepository.countByEmployerId(1)).thenReturn(4);
+
+        int result = postingService.countByEmployerId(1);
+
+        verify(postingRepository, times(2)).countByEmployerId(1);
+        assertEquals(4, result);
+    }
+
+    @Test
+    void testCountByEmployerId_ReturnsZero() {
+        when(postingRepository.countByEmployerId(99)).thenReturn(0);
+
+        int result = postingService.countByEmployerId(99);
+
+        verify(postingRepository, times(1)).countByEmployerId(99);
+        assertEquals(0, result);
+    }
+
+    @Test
+    void testUpdateStatusById_Success() {
+        when(postingRepository.updateStatusById(1, true)).thenReturn(1);
+
+        boolean result = postingService.updateStatusById(1, true);
+
+        verify(postingRepository).updateStatusById(1, true);
+        assertTrue(result);
+    }
+
+    @Test
+    void testUpdateStatusById_Failure() {
+        when(postingRepository.updateStatusById(1, false)).thenReturn(0);
+
+        boolean result = postingService.updateStatusById(1, false);
+
+        verify(postingRepository).updateStatusById(1, false);
+        assertFalse(result);
+    }
+
+    @Test
+    void testCountByMonthAndYear_ReturnsPositive() {
+        when(postingRepository.countByMonthAndYear(6, 2026)).thenReturn(7);
+
+        int result = postingService.countByMonthAndYear(6, 2026);
+
+        verify(postingRepository, times(2)).countByMonthAndYear(6, 2026);
+        assertEquals(7, result);
+    }
+
+    @Test
+    void testCountByMonthAndYear_ReturnsZero() {
+        when(postingRepository.countByMonthAndYear(1, 2030)).thenReturn(0);
+
+        int result = postingService.countByMonthAndYear(1, 2030);
+
+        verify(postingRepository, times(1)).countByMonthAndYear(1, 2030);
+        assertEquals(0, result);
     }
 }

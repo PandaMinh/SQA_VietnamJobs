@@ -34,6 +34,9 @@ public class EmployerJobControllerTest {
     @Mock
     private RedirectAttributes redirectAttributes;
 
+    @Mock
+    private ApplicationHistoryService applicationHistoryService;
+
     private Postings newJob;
     private Account account;
     private Employer employer;
@@ -164,6 +167,80 @@ public class EmployerJobControllerTest {
         assertEquals(false, newJob.isStatus());
         assertEquals(employer, newJob.getEmployer());
         assertNotNull(newJob.getCreated());
+        verify(redirectAttributes).addFlashAttribute("error", "Thất bại...");
+    }
+
+    @Test
+    void testHandleUpdate_Success() {
+        newJob.setId(2);
+        when(jobProjectService.saveDB(newJob)).thenReturn(true);
+
+        String result = controller.handleUpdate(newJob, redirectAttributes, auth);
+
+        verify(jobProjectService).saveDB(newJob);
+        assertEquals("redirect:/employer/job/update/2", result);
+        verify(redirectAttributes).addFlashAttribute("success", "Thành công!");
+    }
+
+    @Test
+    void testHandleUpdate_Failure_SaveReturnsFalse() {
+        newJob.setId(2);
+        when(jobProjectService.saveDB(newJob)).thenReturn(false);
+
+        String result = controller.handleUpdate(newJob, redirectAttributes, auth);
+
+        verify(jobProjectService).saveDB(newJob);
+        assertEquals("redirect:/employer/job/update/2", result);
+        verify(redirectAttributes).addFlashAttribute("error", "Thất bại...");
+    }
+
+    @Test
+    void testHandleUpdate_Failure_Exception() {
+        newJob.setId(2);
+        when(jobProjectService.saveDB(newJob)).thenThrow(new RuntimeException("DB error"));
+
+        String result = controller.handleUpdate(newJob, redirectAttributes, auth);
+
+        verify(jobProjectService).saveDB(newJob);
+        assertEquals("redirect:/employer/job/update/2", result);
+        verify(redirectAttributes).addFlashAttribute("error", "Thất bại...");
+    }
+
+    @Test
+    void testDelete_WhenApplicationsExist_ShowsExistApplyMessage() {
+        when(applicationHistoryService.existByPostId(10)).thenReturn(true);
+
+        String result = controller.delete(10, redirectAttributes);
+
+        verify(applicationHistoryService).existByPostId(10);
+        verify(jobProjectService, never()).delete(anyInt());
+        assertEquals("redirect:/employer/job", result);
+        verify(redirectAttributes).addFlashAttribute("existApply", "Không thể xóa. Bạn có thể sửa trạng thái sang ẩn.");
+    }
+
+    @Test
+    void testDelete_WhenDeleteSucceeds_ShowsSuccess() {
+        when(applicationHistoryService.existByPostId(10)).thenReturn(false);
+        when(jobProjectService.delete(10)).thenReturn(true);
+
+        String result = controller.delete(10, redirectAttributes);
+
+        verify(applicationHistoryService).existByPostId(10);
+        verify(jobProjectService).delete(10);
+        assertEquals("redirect:/employer/job", result);
+        verify(redirectAttributes).addFlashAttribute("success", "Thành công!");
+    }
+
+    @Test
+    void testDelete_WhenDeleteFails_ShowsError() {
+        when(applicationHistoryService.existByPostId(10)).thenReturn(false);
+        when(jobProjectService.delete(10)).thenReturn(false);
+
+        String result = controller.delete(10, redirectAttributes);
+
+        verify(applicationHistoryService).existByPostId(10);
+        verify(jobProjectService).delete(10);
+        assertEquals("redirect:/employer/job", result);
         verify(redirectAttributes).addFlashAttribute("error", "Thất bại...");
     }
 }

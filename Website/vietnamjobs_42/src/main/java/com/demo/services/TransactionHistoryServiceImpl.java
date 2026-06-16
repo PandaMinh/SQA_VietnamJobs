@@ -40,7 +40,7 @@ public class TransactionHistoryServiceImpl implements TransactionHistoryService{
 		// TODO Auto-generated method stub
 		try {
 			transactionHistoryRepository.delete(transactionHistoryRepository.findById(id).get());
-			return false;
+			return true;
 		} catch (Exception e) {
 			// TODO: handle exception
 			e.printStackTrace();
@@ -92,7 +92,7 @@ public class TransactionHistoryServiceImpl implements TransactionHistoryService{
 	@Override
 	public double totalbyaccountid(int accountid) {
 		// TODO Auto-generated method stub
-		return 0;
+		return transactionHistoryRepository.totalbyemployerid(accountid);
 	}
 
 	

@@ -59,7 +59,7 @@ public class PostingPaymentServiceImpl implements PostingPaymentService{
 		// TODO Auto-generated method stub
 		try {
 			postingsPaymentRepository.delete(postingsPaymentRepository.findById(id).get());
-			return false;
+			return true;
 		} catch (Exception e) {
 			// TODO: handle exception
 			e.printStackTrace();

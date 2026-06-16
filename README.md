@@ -1,105 +1,144 @@
-VietnamJobs - Job Seeker Assistance and Job Listing Platform  
-📌 Giới thiệu   
-VietnamJobs là một nền tảng website và ứng dụng di động hỗ trợ người tìm việc trong việc tìm kiếm cơ hội việc làm, đồng thời cung cấp công cụ cho nhà tuyển dụng để đăng và quản lý các bài đăng tuyển dụng dựa trên các yêu cầu cụ thể.  
-Công nghệ chính: Java, Flutter.  
+# VietnamJobs
 
-🚀 Các chức năng chính  
-1. Chức năng cho Người tìm việc (Job Seeker)  
-- Tìm kiếm việc làm:  
+Job Seeker Assistance and Job Listing Platform.
 
-Tìm kiếm việc làm dựa trên vị trí, ngành nghề, mức lương, v.v.  
+## Giới thiệu
 
-Lọc kết quả tìm kiếm theo mức lương, loại công việc, kinh nghiệm, v.v.  
+VietnamJobs là một nền tảng website và ứng dụng di động hỗ trợ:
+- Người tìm việc tìm kiếm cơ hội việc làm.
+- Nhà tuyển dụng đăng và quản lý tin tuyển dụng.
+- Quản trị viên quản lý người dùng, bài đăng và dữ liệu hệ thống.
 
-- Tạo và quản lý hồ sơ cá nhân:  
+Công nghệ chính: Java Spring Boot, Thymeleaf, MySQL, Flutter.
 
-Điền thông tin cá nhân, học vấn, kinh nghiệm làm việc, kỹ năng.  
+## Cấu trúc project
 
-Tải lên CV và thông tin liên quan.  
+- `Website/vietnamjobs_42`: Backend + Web (Spring Boot)
+- `App/aptech`: Mobile app (Flutter)
+- `Database/vietnamjobs.sql`: Dữ liệu database mẫu
 
-- Xem chi tiết công việc:  
+## Yêu cầu môi trường
 
-Xem mô tả công việc, yêu cầu, lợi ích, và thông tin công ty.  
+1. Java JDK 21
+2. MySQL 8.x (hoặc tương thích)
+3. PowerShell (Windows)
+4. (Tuỳ chọn) Flutter SDK nếu chạy mobile app
 
-- Ứng tuyển trực tuyến:  
+## Chạy project local (step-by-step)
 
-Nộp đơn ứng tuyển và CV qua hệ thống.  
+### 1. Chuẩn bị database
 
-- Thông báo và cập nhật:  
+1. Tạo database:
+```sql
+CREATE DATABASE vietnamjobs;
+```
+2. Import file SQL:
+- File: `Database/vietnamjobs.sql`
+- Có thể import bằng MySQL Workbench hoặc lệnh:
+```powershell
+mysql -u root -p vietnamjobs < Database\vietnamjobs.sql
+```
 
-Nhận thông báo về các công việc mới, trạng thái ứng tuyển, và các thông tin liên quan.  
+3. Nếu cần seed thêm dữ liệu:
+- Dùng `Database/seed_smoke.sql` cho E2E, integration, regression hằng ngày
+- Dùng `Database/seed_performance.sql` cho benchmark/performance riêng
 
-- Tương tác với công việc:  
+Ví dụ:
+```powershell
+mysql -u root -p vietnamjobs < Database\seed_smoke.sql
+```
 
-Thích, chia sẻ, hoặc lưu các công việc yêu thích.  
+Lưu ý:
+- `seed_smoke.sql` sẽ dọn dữ liệu `perf_*` cũ rồi seed bộ nhỏ
+- `seed_performance.sql` sẽ dọn dữ liệu `perf_*` cũ rồi seed bộ lớn
+- Không nên dùng `seed_performance.sql` để chạy UI regression thường xuyên vì các route public hiện tại còn xử lý full-scan
+- `seed_smoke.sql` hiện được chỉnh cho autotest hằng ngày với quy mô nhỏ:
+  - `55` seeker
+  - `50` employer
+  - `60` posting
+  - `65` application
+  - `60` follow
 
-2. Chức năng cho Nhà tuyển dụng (Employer)  
-- Đăng và quản lý bài đăng tuyển dụng:  
+### 2. Cấu hình env cho backend
 
-Tạo, chỉnh sửa, và xóa các bài đăng tuyển dụng.  
+1. Vào thư mục backend:
+```powershell
+cd Website\vietnamjobs_42
+```
+2. Tạo file env local:
+```powershell
+Copy-Item .env.local.ps1.example .env.local.ps1
+```
+3. Mở `.env.local.ps1` và chỉnh các biến cần thiết (đặc biệt DB user/password):
+- `DB_URL`
+- `DB_USERNAME`
+- `DB_PASSWORD`
+- `MAIL_USERNAME`, `MAIL_PASSWORD` (nếu cần chức năng gửi mail)
 
-- Tìm kiếm và xem hồ sơ ứng viên:  
+Ghi chú:
+- Script chạy local đã có sẵn trong `run-local.ps1`.
+- Script sẽ load `.env.local.ps1`, set `SPRING_PROFILES_ACTIVE=local` và chạy Maven Wrapper.
 
-Tìm kiếm ứng viên và xem CV của họ.  
+### 3. Chạy backend + website
 
-- Quản lý quy trình tuyển dụng:  
+Trong `Website\vietnamjobs_42` chạy:
+```powershell
+.\run-local.ps1
+```
 
-Xem danh sách ứng tuyển và quản lý quy trình tuyển dụng.  
+Khi chạy thành công, website mở tại:
+- `http://localhost:8087`
 
-- Thanh toán:  
+### 4. (Tuỳ chọn) Chạy Flutter app
 
-Quản lý thanh toán cho các dịch vụ cao cấp hoặc bài đăng tuyển dụng.  
+1. Mở terminal mới, vào thư mục app:
+```powershell
+cd App\aptech
+```
+2. Cài dependency:
+```powershell
+flutter pub get
+```
+3. Chạy app:
+```powershell
+flutter run
+```
 
-3. Chức năng cho Quản trị viên (Admin)  
-- Quản lý người dùng:  
+Lưu ý:
+- Đảm bảo app trỏ đúng backend URL (thường là `http://localhost:8087` hoặc IP LAN khi chạy trên thiết bị thật).
 
-Xem, chỉnh sửa, và xóa tài khoản người dùng (người tìm việc và nhà tuyển dụng).  
+## Troubleshooting nhanh
 
-- Quản lý bài đăng tuyển dụng:  
+1. Lỗi kết nối DB:
+- Kiểm tra MySQL đang chạy.
+- Kiểm tra đúng `DB_URL`, `DB_USERNAME`, `DB_PASSWORD` trong `.env.local.ps1`.
 
-Duyệt, chỉnh sửa, hoặc xóa các bài đăng tuyển dụng.  
+2. Port `8087` bị chiếm:
+- Đổi `SERVER_PORT` trong `.env.local.ps1`.
 
-- Thống kê và báo cáo:  
+3. Lỗi Java:
+- Kiểm tra cài JDK 21.
+- Kiểm tra `JAVA_HOME` (script mặc định dùng `C:\Program Files\Java\jdk-21` nếu chưa set).
 
-Xem báo cáo về lưu lượng truy cập, tương tác người dùng, và hiệu suất bài đăng.  
+## Tính năng chính
 
-- Quản lý thanh toán:  
+1. Người tìm việc:
+- Tìm kiếm/lọc việc làm.
+- Quản lý hồ sơ và CV.
+- Ứng tuyển, theo dõi trạng thái.
 
-Theo dõi thanh toán cho các dịch vụ cao cấp hoặc bài đăng tuyển dụng.  
+2. Nhà tuyển dụng:
+- Đăng/chỉnh sửa/xoá tin tuyển dụng.
+- Xem hồ sơ ứng viên.
+- Quản lý quy trình tuyển dụng.
 
-- Hỗ trợ người dùng:  
+3. Quản trị viên:
+- Quản lý tài khoản, bài đăng.
+- Thống kê/báo cáo.
+- Hỗ trợ người dùng.
 
-Trả lời các yêu cầu hỗ trợ và phản hồi từ người dùng.  
+## Tài liệu tham khảo
 
-4. Chức năng khác  
-- Đăng nhập/Đăng ký:  
-
-Người dùng có thể đăng ký tài khoản mới hoặc đăng nhập vào hệ thống.  
-
-- Quên mật khẩu:  
-
-Khôi phục mật khẩu qua email.  
-
-- Cập nhật thông tin cá nhân:  
-
-Người dùng có thể cập nhật thông tin cá nhân, thay đổi mật khẩu, và quản lý tùy chọn thông báo.  
-
-- Liên hệ và hỗ trợ:  
-
-Gửi yêu cầu liên hệ hoặc hỗ trợ từ website.  
-
-🛠️ Công nghệ sử dụng  
-Frontend: HTML, CSS, JavaScript, Java, Spring Framework, Flutter  
-
-Backend: Java, Spring Framework
-
-Database: MySQL
-
-
-
-Project in aptech: Vietnamjobs  
-Due: 26/04/2024 - 13/05/2024  
-Link drive:  
-- Demo website: https://drive.google.com/file/d/1JIO2ZKBJ-Ft_5Qd71PWQuP4ZOuoFaUvA/view?usp=drive_link  
-- Demo app: https://drive.google.com/file/d/1ktE5Q1gBZEoVxmnPB2ePlyoingwgaC0B/view?usp=sharing  
+- Demo website: https://drive.google.com/file/d/1JIO2ZKBJ-Ft_5Qd71PWQuP4ZOuoFaUvA/view?usp=drive_link
+- Demo app: https://drive.google.com/file/d/1ktE5Q1gBZEoVxmnPB2ePlyoingwgaC0B/view?usp=sharing
 - Báo cáo: https://docs.google.com/document/d/1pFXK16MTiGwkGbooDZsSsAjUhwBkbXmmUYY3STUuJvs/edit?tab=t.0#heading=h.6g0rregb0izk

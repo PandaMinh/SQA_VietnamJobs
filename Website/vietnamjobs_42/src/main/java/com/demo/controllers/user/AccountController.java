@@ -55,6 +55,10 @@ public class AccountController {
 	public String changepassword(@RequestParam("username") String username,@RequestParam("password") String password,@RequestParam("confirmpassword") String confirmpassword, RedirectAttributes redirectAttributes) {
 		if(confirmpassword.trim().equals(password.trim())) {
 			AccountDTO accountDTO = accountService.findByUsername(username);
+			if (accountDTO == null) {
+				redirectAttributes.addFlashAttribute("errorMk", "failed");
+				return "redirect:/account/changepassword";
+			}
 			accountDTO.setPassword(encoder.encode(password.trim()));
 			if(accountService.save(accountDTO)) {
 				redirectAttributes.addFlashAttribute("successMk", "pass");
@@ -76,6 +80,10 @@ public class AccountController {
 		RandomHelper random = new RandomHelper();
 		String newpasscode = random.randomAlphaNumeric(20);
 		AccountDTO accountDTO = accountService.findByEmail(email);
+		if (accountDTO == null) {
+			redirectAttributes.addFlashAttribute("error", "Failed 2");
+			return "redirect:/account/forgotpassword";
+		}
 		accountDTO.setSecurityCode(newpasscode);
 		if (accountService.save(accountDTO)) {
 			String from =  environment.getProperty("spring.mail.username");
@@ -104,11 +112,20 @@ public class AccountController {
 	
 	@PostMapping("register")
 	public String register(@ModelAttribute AccountDTO accountDTO, @RequestParam("password") String password, RedirectAttributes redirectAttributes) {
+			if (accountDTO.getUsername() == null || accountDTO.getUsername().trim().isEmpty()) {
+				redirectAttributes.addFlashAttribute("error", "Username is required");
+				return "redirect:/account/register";
+			}
 			RandomHelper random = new RandomHelper();
 			String securityCode = random.randomAlphaNumeric(10);
+			accountDTO.setUsername(accountDTO.getUsername().trim());
 			accountDTO.setCreated(new Date());
 			accountDTO.setStatus(false);
 			TypeAccount typeAccount = serviceModelMap.findbytypeaccountname(accountDTO.getTypeAccount());
+			if (typeAccount == null) {
+				redirectAttributes.addFlashAttribute("error", "Failed 3");
+				return "redirect:/account/register";
+			}
 			accountDTO.setTypeAccountID(typeAccount.getId());
 			accountDTO.setPassword(encoder.encode(password.trim()));
 			accountDTO.setSecurityCode(securityCode);
@@ -132,7 +149,7 @@ public class AccountController {
 					return "redirect:/account/register";
 				}			
 			} else {
-				redirectAttributes.addFlashAttribute("error", "Failed 3");
+				redirectAttributes.addFlashAttribute("error", "Username already exists or account data is invalid");
 				return "redirect:/account/register";
 			}
 		}

@@ -36,12 +36,8 @@ public class CheckmailController {
 	@GetMapping({ "/{username}/{securityCode}" })
 	public String index(@PathVariable("username") String username, @PathVariable("securityCode") String securityCode,
 			RedirectAttributes redirectAttributes) {
-		AccountDTO accountDTO = accountService.findByUsername(username);
-		System.out.println(accountDTO.getSecurityCode());
-		System.out.println(securityCode);
-		String s1 = accountDTO.getSecurityCode().toString();
-		String s2 = securityCode.toString();
-		if(s1.equals(s2)) {
+		AccountDTO accountDTO = accountService.findByUsernameAndSecurityCode(username, securityCode);
+		if(accountDTO != null) {
 			accountDTO.setStatus(true);
 			if(accountService.save(accountDTO)) {
 				String typeAccount = accountDTO.getTypeAccount().trim().toLowerCase();
@@ -96,10 +92,8 @@ public class CheckmailController {
 	@GetMapping({ "forgotpassword/{username}/{sercuritycode}" })
 	public String index2(@PathVariable("username") String username, @PathVariable("sercuritycode") String sercuritycode,
 			ModelMap modelMap) {
-		AccountDTO accountDTO = accountService.findByUsername(username);
-		String s1 = accountDTO.getSecurityCode().trim().toString();
-		String s2 = sercuritycode.toString();
-		if(s1.equals(s2)) {
+		AccountDTO accountDTO = accountService.findByUsernameAndSecurityCode(username, sercuritycode);
+		if(accountDTO != null) {
 			modelMap.put("username", username);
 			return "account/changepassword";
 		} else {
